@@ -11,7 +11,7 @@ decodePost =
     decode Post
         |> required "postId" int
         |> required "postName" string
-        |> required "postAge" (nullable float)
+        |> required "postAge" (maybe float)
         |> required "postComments" (list decodeComment)
-        |> required "postPromoted" (nullable decodeComment)
-        |> required "postAuthor" (nullable string)
+        |> required "postPromoted" (maybe decodeComment)
+        |> required "postAuthor" (maybe string)

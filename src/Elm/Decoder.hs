@@ -125,7 +125,7 @@ instance HasDecoderRef ElmPrimitive where
     return . parens $ "map Dict.fromList" <+> d
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
-    return . parens $ "nullable" <+> dt
+    return . parens $ "maybe" <+> dt
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
