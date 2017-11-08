@@ -58,4 +58,4 @@ test-suite elm-export-test
 
 source-repository head
   type:     git
-  location: https://github.com/mebassett/elm-export 
+  location: https://github.com/TriviumRealEstate/meb-elm-export
