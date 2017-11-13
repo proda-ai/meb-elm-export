@@ -138,6 +138,7 @@ instance HasDecoderRef ElmPrimitive where
   renderRef EChar = pure "char"
   renderRef EFloat = pure "float"
   renderRef EString = pure "string"
+  renderRef ENativeFile = pure "FileReader.NativeFile"
 
 toElmDecoderRefWith
   :: ElmType a
