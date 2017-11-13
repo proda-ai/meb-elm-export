@@ -134,6 +134,7 @@ instance HasEncoderRef ElmPrimitive where
   renderRef EBool = pure "Json.Encode.bool"
   renderRef EFloat = pure "Json.Encode.float"
   renderRef EString = pure "Json.Encode.string"
+  renderRef ENativeFile = pure "Json.Encode.null" -- we never encode a file. the server doesn't send files to clients. Not yet anyhow...
   renderRef (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
   renderRef (EList datatype) = do
     dd <- renderRef datatype

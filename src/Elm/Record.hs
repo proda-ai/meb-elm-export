@@ -95,6 +95,7 @@ instance HasTypeRef ElmPrimitive where
   renderRef EString = pure "String"
   renderRef EUnit = pure "()"
   renderRef EFloat = pure "Float"
+  renderRef ENativeFile = pure "List FileReader.NativeFile"
 
 -- | Puts parentheses around the doc of an elm ref if it contains spaces.
 elmRefParens :: ElmPrimitive -> Doc -> Doc

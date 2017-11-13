@@ -31,6 +31,7 @@ data ElmPrimitive
   | EFloat
   | EString
   | EUnit
+  | ENativeFile
   | EList ElmDatatype
   | EMaybe ElmDatatype
   | ETuple2 ElmDatatype
