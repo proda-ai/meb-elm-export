@@ -27,10 +27,17 @@ instance HasEncoder ElmDatatype where
     return $
       (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value") <$$>
       (fnName <+> "x =" <$$> indent 4 ctor)
+  render d@(ElmHttpIdType name constructor _) = do
+    fnName <- renderRef d
+    ctor <- render constructor
+    return $
+      (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value") <$$>
+      (fnName <+> "x =" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasEncoderRef ElmDatatype where
   renderRef (ElmDatatype name _) = pure $ "encode" <> stext name
+  renderRef (ElmHttpIdType name _ _) = pure $ "encode" <> stext name
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
 instance HasEncoder ElmConstructor where
