@@ -138,7 +138,7 @@ instance HasDecoderRef ElmPrimitive where
     return . parens $
       "map2 Tuple.pair" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
   renderRef EUnit = pure $ parens "succeed ()"
-  renderRef ETimePosix = pure "Iso8601.decoder"
+  renderRef EDate = pure $ parens "Json.Decode.map (Date.fromPosix Time.utc) Iso8061.decoder"
   renderRef EInt = pure "int"
   renderRef EBool = pure "bool"
   renderRef EChar = pure "char"

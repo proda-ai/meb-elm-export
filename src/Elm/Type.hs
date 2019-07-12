@@ -28,7 +28,7 @@ data ElmPrimitive
   = EInt
   | EBool
   | EChar
-  | ETimePosix
+  | EDate
   | EFloat
   | EString
   | EUnit
@@ -140,10 +140,10 @@ instance ElmType Text where
   toElmType _ = ElmPrimitive EString
 
 instance ElmType Day where
-  toElmType _ = ElmPrimitive ETimePosix
+  toElmType _ = ElmPrimitive EDate
 
 instance ElmType UTCTime where
-  toElmType _ = ElmPrimitive ETimePosix
+  toElmType _ = ElmPrimitive EDate
 
 instance ElmType Float where
   toElmType _ = ElmPrimitive EFloat

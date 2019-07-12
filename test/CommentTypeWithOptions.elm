@@ -9,6 +9,6 @@ type alias Comment =
     , commentText : String
     , commentMainCategories : (String, String)
     , commentPublished : Bool
-    , commentCreated : Time.Posix
+    , commentCreated : Date
     , commentTags : Dict (String) (Int)
     }
