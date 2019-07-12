@@ -14,5 +14,5 @@ decodeComment =
         |> required "commentText" string
         |> required "commentMainCategories" (map2 Tuple.pair (index 0 string) (index 1 string))
         |> required "commentPublished" bool
-        |> required "commentCreated" (Json.Decode.map (Date.fromPosix Time.utc) Iso8061.decoder)
+        |> required "commentCreated" (Json.Decode.map (Date.fromPosix Time.utc) Iso8601.decoder)
         |> required "commentTags" (dict int)
