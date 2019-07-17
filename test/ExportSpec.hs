@@ -639,10 +639,11 @@ moduleSpecsSpec =
       head (declarations mySpec) `shouldBe`
       intercalate
         "\n"
-        [ "import Date"
-        , "import Dict"
+        [ "import Dict"
+        , "import Iso8601"
         , "import Json.Decode exposing (..)"
         , "import Json.Decode.Pipeline exposing (..)"
+        , "import Time"
         ]
 
 shouldMatchTypeSource
