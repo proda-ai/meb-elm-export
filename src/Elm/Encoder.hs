@@ -135,6 +135,7 @@ instance HasEncoder ElmValue where
 
 instance HasEncoderRef ElmPrimitive where
   renderRef _ EDate = pure  $ parens "Json.Encode.string << Date.toIsoString"
+  renderRef _ ETimePosix = pure "Iso8601.encode"
   renderRef _ EUnit = pure "Json.Encode.null"
   renderRef _ EInt = pure "Json.Encode.int"
   renderRef _ EChar = pure "Json.Encode.char"

@@ -90,6 +90,10 @@ instance HasTypeRef ElmPrimitive where
   renderRef EDate = do
     require "Date"
     pure "Date"
+  renderRef ETimePosix = do
+    require "Iso8601"
+    require "Time"
+    pure "Time.Posix"
   renderRef EBool = pure "Bool"
   renderRef EChar = pure "Char"
   renderRef EString = pure "String"

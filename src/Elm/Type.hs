@@ -29,6 +29,7 @@ data ElmPrimitive
   | EBool
   | EChar
   | EDate
+  | ETimePosix
   | EFloat
   | EString
   | EUnit
@@ -143,7 +144,7 @@ instance ElmType Day where
   toElmType _ = ElmPrimitive EDate
 
 instance ElmType UTCTime where
-  toElmType _ = ElmPrimitive EDate
+  toElmType _ = ElmPrimitive ETimePosix
 
 instance ElmType Float where
   toElmType _ = ElmPrimitive EFloat

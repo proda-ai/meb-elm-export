@@ -3,12 +3,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Elm.Decoder
-  ( toElmDecoderRef
-  , toElmDecoderRefWith
-  , toElmDecoderSource
-  , toElmDecoderSourceWith
-  , renderDecoder
+module Elm.StringTo
+  ( toElmStringToRef
+  , toElmStringToRefWith
+  , toElmStringToSource
+  , toElmStringToSourceWith
+  , renderStringTo
   ) where
 
 import Control.Monad.RWS
@@ -17,28 +17,37 @@ import Elm.Common
 import Elm.Type
 import Text.PrettyPrint.Leijen.Text hiding ((<$>), (<>))
 
-class HasDecoder a where
+class HasStringTo a where
   render :: a -> RenderM Doc
 
-class HasDecoderRef a where
+class HasStringToRef a where
   renderRef :: a -> RenderM Doc
 
-instance HasDecoder ElmDatatype where
+instance HasStringTo ElmDatatype where
   render d@(ElmDatatype name constructor) = do
+    let typeName = stext name
+        parserName = "parser" <> typeName
     fnName <- renderRef d
     ctor <- render constructor
     return $
-      (fnName <+> ": Decoder" <+> stext name) <$$>
-      (fnName <+> "=" <$$> indent 4 ctor)
+      (fnName <+> ": String -> Maybe " <+> typeName) <$$>
+      (fnName <+> " x = " <$$> indent 4 ctor)
+
+  render m@(ElmPrimitive (EMaybe d@(ElmDatatype name constructor))) = do
+    let fnName = "stringToMaybe" <> stext name
+    dv <- renderRef m
+    return $
+      (fnName <+> ": String -> Maybe" <+> parens (stext name)) <$$>
+      (fnName <+> "=" <+> dv)
   render (ElmPrimitive primitive) = renderRef primitive
 
-instance HasDecoderRef ElmDatatype where
-  renderRef (ElmDatatype name _) = pure $ "decode" <> stext name
+instance HasStringToRef ElmDatatype where
+  renderRef (ElmDatatype name _) = pure $ "stringTo" <> stext name
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
-instance HasDecoder ElmConstructor where
+instance HasStringTo ElmConstructor where
   render (NamedConstructor name ElmEmpty) =
-    return $ "succeed" <+> stext name
+    return $ stext name
   render (NamedConstructor name value) = do
     dv <- render value
     return $ dv <$$> indent 4 ("|> map" <+> stext name)
@@ -47,21 +56,14 @@ instance HasDecoder ElmConstructor where
     return $ "succeed" <+> stext name <$$> indent 4 dv
 
   render mc@(MultipleConstructors constrs) = do
-      cstrs <- mapM renderSum constrs
-      pure $ constructorName <$$> indent 4
-        ("|> andThen" <$$>
-          indent 4 (newlineparens ("\\x ->" <$$>
-            (indent 4 $ "case x of" <$$>
+      let rndr = if isEnumeration mc
+          then renderSum
+          else error "can only stringTo<blah> enumeration constructors"
+      cstrs <- mapM rndr constrs
+      pure $ "case x of" <$$>
               (indent 4 $ foldl1 (<$+$>) cstrs <$+$>
-               "_ ->" <$$> indent 4 "fail \"Constructor not matched\""
+               "_ ->" <$$> indent 4 "Nothing"
               )
-            )
-          ))
-        )
-    where
-      constructorName :: Doc
-      constructorName =
-        if isEnumeration mc then "string" else "field \"tag\" string"
 
 -- | required "contents"
 requiredContents :: Doc
@@ -72,7 +74,7 @@ renderSumCondition :: T.Text -> Doc -> RenderM Doc
 renderSumCondition name contents =
   pure $ dquotes (stext name) <+> "->" <$$>
     indent 4
-      ("succeed" <+> stext name <$$> indent 4 contents)
+      ("Just" <+> stext name <$$> indent 4 contents)
 
 -- | Render a sum type constructor in context of a data type with multiple
 -- constructors.
@@ -103,7 +105,7 @@ renderConstructorArgs i val = do
   let index = parens $ "index" <+> int i <+> rndrVal
   pure (i, "|>" <+> requiredContents <+> index)
 
-instance HasDecoder ElmValue where
+instance HasStringTo ElmValue where
   render (ElmRef name) = pure $ "decode" <> stext name
   render (ElmPrimitiveRef primitive) = renderRef primitive
   render (Values x y) = do
@@ -116,7 +118,7 @@ instance HasDecoder ElmValue where
     return $ "|> required" <+> dquotes (stext (fieldModifier name)) <+> dv
   render ElmEmpty = pure (stext "")
 
-instance HasDecoderRef ElmPrimitive where
+instance HasStringToRef ElmPrimitive where
   renderRef (EList (ElmPrimitive EChar)) = pure "string"
   renderRef (EList datatype) = do
     dt <- renderRef datatype
@@ -131,47 +133,46 @@ instance HasDecoderRef ElmPrimitive where
     return . parens $ "map Dict.fromList" <+> d
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
-    return . parens $ "nullable" <+> dt
+    return . parens $ "\\x -> if String.startsWith \"Just \" x then " <+> dt <+> " (String.dropLeft 5 x) else Nothing"
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
     return . parens $
       "map2 Tuple.pair" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
-  renderRef EUnit = pure $ parens "succeed ()"
-  renderRef EDate = pure $ parens "Json.Decode.map (Date.fromIsoString) string"
-  renderRef ETimePosix = pure "Iso8601.decoder"
+  renderRef EUnit = pure $ parens "always ()"
   renderRef EInt = pure "int"
   renderRef EBool = pure "bool"
   renderRef EChar = pure "char"
   renderRef EFloat = pure "float"
   renderRef EString = pure "string"
+  renderRef _ = error "Only support primitive or enumeration types for StringTo"
 
-toElmDecoderRefWith
+toElmStringToRefWith
   :: ElmType a
   => Options -> a -> T.Text
-toElmDecoderRefWith options x =
+toElmStringToRefWith options x =
   pprinter . fst $ evalRWS (renderRef (toElmType x)) options ()
 
-toElmDecoderRef
+toElmStringToRef
   :: ElmType a
   => a -> T.Text
-toElmDecoderRef = toElmDecoderRefWith defaultOptions
+toElmStringToRef = toElmStringToRefWith defaultOptions
 
-toElmDecoderSourceWith
+toElmStringToSourceWith
   :: ElmType a
   => Options -> a -> T.Text
-toElmDecoderSourceWith options x =
+toElmStringToSourceWith options x =
   pprinter . fst $ evalRWS (render (toElmType x)) options ()
 
-toElmDecoderSource
+toElmStringToSource
   :: ElmType a
   => a -> T.Text
-toElmDecoderSource = toElmDecoderSourceWith defaultOptions
+toElmStringToSource = toElmStringToSourceWith defaultOptions
 
-renderDecoder
+renderStringTo
   :: ElmType a
   => a -> RenderM ()
-renderDecoder x = do
+renderStringTo x = do
   require "Json.Decode exposing (..)"
   require "Json.Decode.Pipeline exposing (..)"
   collectDeclaration . render . toElmType $ x
