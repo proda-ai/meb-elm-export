@@ -122,3 +122,78 @@ stringToMaybeOnlyThree x =
             Just Three
         
         _ -> Nothing
+
+type OfficeRef
+    = ExistingOffice Int
+    | NewOffice Int
+
+decodeOfficeRef : Decoder OfficeRef
+decodeOfficeRef =
+    field "tag" string
+        |> andThen
+            (\x ->
+                case x of
+                    "ExistingOffice" ->
+                        succeed ExistingOffice
+                            |> required "contents" int
+
+                    "NewOffice" ->
+                        succeed NewOffice
+                            |> required "contents" int
+
+                    _ ->
+                        fail "Constructor not matched"
+            )
+
+encodeOfficeRef : OfficeRef -> Json.Encode.Value
+encodeOfficeRef x =
+    case x of
+        ExistingOffice y0 ->
+            Json.Encode.object
+                [ ( "tag", Json.Encode.string "ExistingOffice" )
+                , ( "contents", Json.Encode.int y0 )
+                ]
+
+        NewOffice y0 ->
+            Json.Encode.object
+                [ ( "tag", Json.Encode.string "NewOffice" )
+                , ( "contents", Json.Encode.int y0 )
+                ]
+
+type Pairs
+    = FirstPair String
+    | SecondPair String Int
+
+decodePairs : Decoder Pairs
+decodePairs =
+    field "tag" string
+        |> andThen
+            (\x ->
+                case x of
+                    "FirstPair" ->
+                        succeed FirstPair
+                            |> required "contents" string
+
+                    "SecondPair" ->
+                        succeed SecondPair
+                            |> required "contents" (index 0 string)
+                            |> required "contents" (index 1 int)
+
+                    _ ->
+                        fail "Constructor not matched"
+            )
+
+encodePairs : Pairs -> Json.Encode.Value
+encodePairs x =
+    case x of
+        FirstPair y0 ->
+            Json.Encode.object
+                [ ( "tag", Json.Encode.string "FirstPair" )
+                , ( "contents", Json.Encode.string y0 )
+                ]
+
+        SecondPair y0 y1 ->
+            Json.Encode.object
+                [ ( "tag", Json.Encode.string "SecondPair" )
+                , ( "contents", Json.Encode.list identity [ Json.Encode.string y0, Json.Encode.int y1 ] )
+                ]

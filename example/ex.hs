@@ -12,12 +12,24 @@ import           Data.Time.Clock
 
 data OnlyThree = One | Two | Three deriving (Show, Eq, Generic, ElmType)
 
+data Pairs = FirstPair String | SecondPair String Int deriving (Show, Eq, Generic, ElmType)
+
+data OfficeRef = ExistingOffice Int | NewOffice Int deriving (Show, Eq, Generic, ElmType)
+
 data Person = Person
   { id :: Int
   , name :: Maybe String
   , birth :: Day
   , accountCreation :: UTCTime
   } deriving (Show, Eq, Generic, ElmType)
+
+
+data Building = Building
+  { address :: String
+  , floors :: OfficeRef
+  } deriving (Show, Eq, Generic, ElmType)
+
+
 
 spec :: Spec
 spec = moduleSpec ["Example"] $ do
@@ -32,6 +44,13 @@ spec = moduleSpec ["Example"] $ do
   renderStringFrom (Proxy :: Proxy (Maybe OnlyThree))
   renderStringTo (Proxy :: Proxy OnlyThree)
   renderStringTo (Proxy :: Proxy (Maybe OnlyThree))
+
+  renderType (Proxy :: Proxy OfficeRef)
+  renderDecoder (Proxy :: Proxy OfficeRef)
+  renderEncoder (Proxy :: Proxy OfficeRef)
+  renderType (Proxy :: Proxy Pairs)
+  renderDecoder (Proxy :: Proxy Pairs)
+  renderEncoder (Proxy :: Proxy Pairs)
 
 main :: IO ()
 main = specsToDir [spec] "src"
