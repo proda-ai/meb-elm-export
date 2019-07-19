@@ -83,9 +83,9 @@ stringFromOnlyThree x =
 stringFromMaybeOnlyThree : Maybe (OnlyThree) -> String
 stringFromMaybeOnlyThree = (Maybe.withDefault  "Nothing"  << Maybe.map ((++) "Just " << stringFromOnlyThree ))
 
-stringToOnlyThree : String -> Maybe  OnlyThree
-stringToOnlyThree  x = 
-    case x of
+stringToMaybeOnlyThree : String ->  Maybe (OnlyThree)
+stringToMaybeOnlyThree x = 
+    case x of 
         "One" ->
             Just One
 
@@ -94,9 +94,33 @@ stringToOnlyThree  x =
 
         "Three" ->
             Just Three
+        
+        _ -> Nothing
 
-        _ ->
-            Nothing
+stringToMaybeOnlyThree : String ->  Maybe (OnlyThree)
+stringToMaybeOnlyThree x = 
+    case x of 
+        "One" ->
+            Just One
 
-stringToMaybeOnlyThree : String -> Maybe (OnlyThree)
-stringToMaybeOnlyThree = (\x -> if String.startsWith "Just " x then  stringToOnlyThree  (String.dropLeft 5 x) else Nothing)
+        "Two" ->
+            Just Two
+
+        "Three" ->
+            Just Three
+        
+        _ -> Nothing
+
+stringToMaybeOnlyThree : String ->  Maybe (OnlyThree)
+stringToMaybeOnlyThree x = 
+    case x of 
+        "One" ->
+            Just One
+
+        "Two" ->
+            Just Two
+
+        "Three" ->
+            Just Three
+        
+        _ -> Nothing
