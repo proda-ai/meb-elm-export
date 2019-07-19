@@ -68,32 +68,30 @@ encodeOnlyThree x =
         Three ->
             Json.Encode.string "Three"
 
-stringFromOnlyThree : OnlyThree -> String
+stringFromOnlyThree : OnlyThree -> Maybe String
 stringFromOnlyThree x =
-    case x of
-        One ->
-            "One"
+        Just One ->
+            Just "One"
 
-        Two ->
-            "Two"
+        Just Two ->
+            Just "Two"
 
-        Three ->
-            "Three"
+        Just Three ->
+            Just "Three"
+        
+        _ -> Nothing
 
-stringFromMaybeOnlyThree : Maybe (OnlyThree) -> String
-stringFromMaybeOnlyThree = (Maybe.withDefault  "Nothing"  << Maybe.map ((++) "Just " << stringFromOnlyThree ))
-
-stringToMaybeOnlyThree : String ->  Maybe (OnlyThree)
-stringToMaybeOnlyThree x = 
+stringFromMaybeOnlyThree : Maybe (OnlyThree) -> Maybe String
+stringFromMaybeOnlyThree x =
     case x of 
-        "One" ->
-            Just One
+        Just One ->
+            Just "One"
 
-        "Two" ->
-            Just Two
+        Just Two ->
+            Just "Two"
 
-        "Three" ->
-            Just Three
+        Just Three ->
+            Just "Three"
         
         _ -> Nothing
 

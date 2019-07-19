@@ -32,7 +32,6 @@ spec = moduleSpec ["Example"] $ do
   renderStringFrom (Proxy :: Proxy (Maybe OnlyThree))
   renderStringTo (Proxy :: Proxy OnlyThree)
   renderStringTo (Proxy :: Proxy (Maybe OnlyThree))
-  renderStringTo (Proxy :: Proxy OnlyThree)
 
 main :: IO ()
 main = specsToDir [spec] "src"
