@@ -168,7 +168,5 @@ toElmStringToSource = toElmStringToSourceWith defaultOptions
 
 renderStringTo :: ElmType a => a -> RenderM ()
 renderStringTo x = do
-  require "Json.Decode exposing (..)"
-  require "Json.Decode.Pipeline exposing (..)"
   collectDeclaration . render . toElmType $ x
 

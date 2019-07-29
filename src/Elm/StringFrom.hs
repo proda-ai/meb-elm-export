@@ -67,13 +67,7 @@ instance HasStringFrom ElmConstructor where
     dv <- render value
 
     let cs = stext name <+> "y0 ->"
-    return . nest 4 $ "case x sssof" <$$> nest 4 (cs <$$> nest 4 dv <+> "y0")
-
-
-  render (RecordConstructor _ value) = do
-    dv <- render value
-    return . nest 4 $ "Json.Encode.object" <$$> "[" <+> dv <$$> "]"
-
+    return . nest 4 $ "case x of" <$$> nest 4 (cs <$$> nest 4 dv <+> "y0")
 
   render mc@(MultipleConstructors constrs) = do
     let rndr = if isEnumeration mc
@@ -155,5 +149,4 @@ toElmStringFromSource = toElmStringFromSourceWith defaultOptions
 
 renderStringFrom :: ElmType a => a -> RenderM ()
 renderStringFrom x = do
-  require "Json.Encode"
   collectDeclaration . render . toElmType $ x
