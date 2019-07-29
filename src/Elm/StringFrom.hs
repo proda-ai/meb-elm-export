@@ -31,14 +31,13 @@ instance HasStringFrom ElmDatatype where
       fnName <- renderRef 0 d
       ctor   <- render constructor
       return
-        $    (fnName <+> ":" <+> stext name <+> "->" <+> "Maybe String")
-        <$$> (fnName <+> "x =" <$$> indent 4 ctor <$$> indent 8 "\n_ -> Nothing"
-             )
+        $    (fnName <+> ":" <+> stext name <+> "->" <+> "String")
+        <$$> (fnName <+> "x =" <$$> indent 4 ctor)
     else error "can only stringFrom enumeration types"
 
   render (ElmPrimitive (EMaybe (ElmDatatype name constructor))) = do
     let typeName = "stringFromMaybe" <> stext name
-    dv <- renderEnumeration constructor
+    dv <- renderMaybeEnumeration constructor
     return
       $    (   typeName
            <+> ": Maybe"
@@ -86,12 +85,19 @@ instance HasStringFrom ElmConstructor where
 
 renderEnumeration :: ElmConstructor -> RenderM Doc
 renderEnumeration (NamedConstructor name _) =
-  pure . nest 4 $ "Just " <> stext name <+> "->" <$$> "Just " <> dquotes
-    ((stext name))
+  pure . nest 4 $ stext name <+> "->" <$$> dquotes ((stext name))
 renderEnumeration (MultipleConstructors constrs) = do
   dc <- mapM renderEnumeration constrs
   pure $ foldl1 (<$+$>) dc
 renderEnumeration c = render c
+
+renderMaybeEnumeration :: ElmConstructor -> RenderM Doc
+renderMaybeEnumeration (NamedConstructor name _) = do
+  pure . nest 4 $ "Just " <> stext name <+> "->" <$$> "Just " <> dquotes
+    ((stext name))
+renderMaybeEnumeration (MultipleConstructors constrs) = do
+  dc <- mapM renderMaybeEnumeration constrs
+  pure $ foldl1 (<$+$>) dc
 
 instance HasStringFrom ElmValue where
   render (ElmPrimitiveRef primitive) = renderRef 0 primitive

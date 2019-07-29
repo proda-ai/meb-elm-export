@@ -68,18 +68,16 @@ encodeOnlyThree x =
         Three ->
             Json.Encode.string "Three"
 
-stringFromOnlyThree : OnlyThree -> Maybe String
+stringFromOnlyThree : OnlyThree -> String
 stringFromOnlyThree x =
-        Just One ->
-            Just "One"
+        One ->
+            "One"
 
-        Just Two ->
-            Just "Two"
+        Two ->
+            "Two"
 
-        Just Three ->
-            Just "Three"
-        
-        _ -> Nothing
+        Three ->
+            "Three"
 
 stringFromMaybeOnlyThree : Maybe (OnlyThree) -> Maybe String
 stringFromMaybeOnlyThree x =
