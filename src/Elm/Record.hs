@@ -90,11 +90,15 @@ instance HasTypeRef ElmPrimitive where
   renderRef EDate = do
     require "Date"
     pure "Date"
+  renderRef ETimePosix = do
+    require "Time"
+    pure "Time.Posix"
   renderRef EBool = pure "Bool"
   renderRef EChar = pure "Char"
   renderRef EString = pure "String"
   renderRef EUnit = pure "()"
   renderRef EFloat = pure "Float"
+  renderRef EFile = pure "List File"
 
 -- | Puts parentheses around the doc of an elm ref if it contains spaces.
 elmRefParens :: ElmPrimitive -> Doc -> Doc

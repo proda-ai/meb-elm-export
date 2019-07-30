@@ -1,4 +1,4 @@
-name: elm-export
+name: meb-elm-export
 version: '0.6.0.1'
 synopsis: A library to generate Elm types from Haskell source.
 description: Generate Elm source code automatically from Haskell types. Using GHC.Generics,

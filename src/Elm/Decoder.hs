@@ -131,7 +131,7 @@ instance HasDecoderRef ElmPrimitive where
     return . parens $ "map Dict.fromList" <+> d
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
-    return . parens $ "nullable" <+> dt
+    return . parens $ "maybe" <+> dt
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
@@ -139,11 +139,13 @@ instance HasDecoderRef ElmPrimitive where
       "map2 Tuple.pair" <+> parens ("index 0" <+> dx) <+> parens ("index 1" <+> dy)
   renderRef EUnit = pure $ parens "succeed ()"
   renderRef EDate = pure $ parens "Json.Decode.map (Date.fromPosix Time.utc) Iso8601.decoder"
+  renderRef ETimePosix = pure "Iso8601.decoder"
   renderRef EInt = pure "int"
   renderRef EBool = pure "bool"
   renderRef EChar = pure "char"
   renderRef EFloat = pure "float"
   renderRef EString = pure "string"
+  renderRef EFile = pure "File.decoder"
 
 toElmDecoderRefWith
   :: ElmType a
