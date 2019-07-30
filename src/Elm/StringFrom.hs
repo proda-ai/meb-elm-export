@@ -35,21 +35,6 @@ instance HasStringFrom ElmDatatype where
         <$$> (fnName <+> "x =" <$$> indent 4 ctor)
     else error "can only stringFrom enumeration types"
 
-  render (ElmPrimitive (EMaybe (ElmDatatype name constructor))) = do
-    let typeName = "stringFromMaybe" <> stext name
-    dv <- renderMaybeEnumeration constructor
-    return
-      $    (   typeName
-           <+> ": Maybe"
-           <+> parens (stext name)
-           <+> "->"
-           <+> "Maybe String"
-           )
-      <$$> (typeName <+> "x =")
-      <$$> indent 4 "case x of \n"
-      <$$> indent 8 dv
-      <$$> indent 8 "\n_ -> Nothing"
-
   render (ElmPrimitive primitive) = renderRef 0 primitive
 
 
@@ -85,52 +70,22 @@ renderEnumeration (MultipleConstructors constrs) = do
   pure $ foldl1 (<$+$>) dc
 renderEnumeration c = render c
 
-renderMaybeEnumeration :: ElmConstructor -> RenderM Doc
-renderMaybeEnumeration (NamedConstructor name _) = do
-  pure . nest 4 $ "Just " <> stext name <+> "->" <$$> "Just " <> dquotes
-    ((stext name))
-renderMaybeEnumeration (MultipleConstructors constrs) = do
-  dc <- mapM renderMaybeEnumeration constrs
-  pure $ foldl1 (<$+$>) dc
-
 instance HasStringFrom ElmValue where
   render (ElmPrimitiveRef primitive) = renderRef 0 primitive
   render _ =
     error "no dice, stringFRom non primitives or enumeration union types"
 
 instance HasStringFromRef ElmPrimitive where
-  renderRef _ EDate                            = pure "Date.toIsoString"
-  renderRef _ ETimePosix                       = pure "Iso8601.fromTime"
-  renderRef _ EUnit                            = pure "\"()\""
-  renderRef _ EInt                             = pure "String.fromInt"
-  renderRef _ EChar                            = pure "identity"
+  renderRef _ EDate                        = pure "Date.toIsoString"
+  renderRef _ ETimePosix                   = pure "Iso8601.fromTime"
+  renderRef _ EUnit                        = pure "\"()\""
+  renderRef _ EInt                         = pure "String.fromInt"
+  renderRef _ EChar                        = pure "identity"
   renderRef _ EBool = pure "(\v -> if v == True then \"True\" else \"False\")"
-  renderRef _ EFloat                           = pure "String.fromFloat"
-  renderRef _ (EList (ElmPrimitive EChar))     = pure "identity"
-  renderRef _ EString                          = pure "identity"
-  renderRef _ (EMaybe (ElmDatatype _ constrs)) = do
-    dd <- render constrs
-    return dd
-  renderRef level (ETuple2 x y) = do
-    dx <- renderRef (level + 1) x
-    dy <- renderRef (level + 1) y
-    let firstName  = "m" <> int level
-    let secondName = "n" <> int level
-    return
-      .   parens
-      $   "\\("
-      <>  firstName
-      <>  ","
-      <+> secondName
-      <>  ") -> String.join \",\" ["
-      <+> dx
-      <+> firstName
-      <>  ","
-      <+> dy
-      <+> secondName
-      <+> "]"
-  renderRef _ dat =
-    error $ "ElmType does not support stringFrom<x>" ++ show dat
+  renderRef _ EFloat                       = pure "String.fromFloat"
+  renderRef _ (EList (ElmPrimitive EChar)) = pure "identity"
+  renderRef _ EString                      = pure "identity"
+  renderRef _ dat = error $ "ElmType does not support stringFrom" ++ show dat
 
 
 toElmStringFromRefWith :: ElmType a => Options -> a -> T.Text
