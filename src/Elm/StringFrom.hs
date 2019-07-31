@@ -73,7 +73,7 @@ renderEnumeration c = render c
 instance HasStringFrom ElmValue where
   render (ElmPrimitiveRef primitive) = renderRef 0 primitive
   render _ =
-    error "no dice, stringFRom non primitives or enumeration union types"
+    error "stringFrom non primitives or enumeration union types"
 
 instance HasStringFromRef ElmPrimitive where
   renderRef _ EDate                        = pure "Date.toIsoString"
@@ -81,7 +81,7 @@ instance HasStringFromRef ElmPrimitive where
   renderRef _ EUnit                        = pure "\"()\""
   renderRef _ EInt                         = pure "String.fromInt"
   renderRef _ EChar                        = pure "identity"
-  renderRef _ EBool = pure "(\v -> if v == True then \"True\" else \"False\")"
+  renderRef _ EBool                        = pure "String.fromBool"
   renderRef _ EFloat                       = pure "String.fromFloat"
   renderRef _ (EList (ElmPrimitive EChar)) = pure "identity"
   renderRef _ EString                      = pure "identity"
