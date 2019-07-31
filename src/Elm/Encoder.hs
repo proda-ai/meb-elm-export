@@ -25,7 +25,7 @@ instance HasEncoder ElmDatatype where
     fnName <- renderRef 0 d
     ctor <- render constructor
     return $
-      (fnName <+> ":" <+> stext name <+> "->" <+> "Json.Encode.Value") <$$>
+      (fnName <+> ":" <+> stext name <+> "->" <+> "JE.Value") <$$>
       (fnName <+> "x =" <$$> indent 4 ctor)
   render (ElmPrimitive primitive) = renderRef 0 primitive
 
@@ -36,10 +36,10 @@ instance HasEncoderRef ElmDatatype where
 instance HasEncoder ElmConstructor where
   -- Single constructor, no values: empty array
   render (NamedConstructor _name ElmEmpty) =
-    return $ "Json.Encode.list identity []"
+    return $ "JE.list_ identity []"
 
   render (NamedConstructor _name (ElmPrimitiveRef EUnit)) =
-    return $ "Json.Encode.list identity []"
+    return $ "JE.list_ identity []"
 
   -- Single constructor, multiple values: create array with values
   render (NamedConstructor name value@(Values _ _)) = do
@@ -49,7 +49,7 @@ instance HasEncoder ElmConstructor where
 
     let cs = stext name <+> foldl1 (<+>) ps <+> "->"
     return . nest 4 $ "case x of" <$$>
-      (nest 4 $ cs <$$> nest 4 ("Json.Encode.list identity" <$$> "[" <+> dv <$$> "]"))
+      (nest 4 $ cs <$$> nest 4 ("JE.list_ identity" <$$> "[" <+> dv <$$> "]"))
 
   -- Single constructor, one value: skip constructor and r just the value
   render (NamedConstructor name value) = do
@@ -62,7 +62,7 @@ instance HasEncoder ElmConstructor where
 
   render (RecordConstructor _ value) = do
     dv <- render value
-    return . nest 4 $ "Json.Encode.object" <$$> "[" <+> dv <$$> "]"
+    return . nest 4 $ "JE.object" <$$> "[" <+> dv <$$> "]"
 
   render mc@(MultipleConstructors constrs) = do
     let rndr = if isEnumeration mc then renderEnumeration else renderSum
@@ -72,7 +72,7 @@ instance HasEncoder ElmConstructor where
 jsonEncodeObject :: Doc -> Doc -> Doc -> Doc
 jsonEncodeObject constructor tag contents =
   nest 4 $ constructor <$$>
-    nest 4 ("Json.Encode.object" <$$> "[" <+> tag <$$>
+    nest 4 ("JE.object" <$$> "[" <+> tag <$$>
       contents <$$>
     "]")
 
@@ -80,7 +80,7 @@ renderSum :: ElmConstructor -> RenderM Doc
 renderSum c@(NamedConstructor name ElmEmpty) = do
   dc <- render c
   let cs = stext name <+> "->"
-  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+  let tag = pair (dquotes "tag") ("JE.string" <+> dquotes (stext name))
   let ct = comma <+> pair (dquotes "contents") dc
 
   return $ jsonEncodeObject cs tag ct
@@ -89,9 +89,9 @@ renderSum (NamedConstructor name value) = do
   let ps = constructorParameters 0 value
 
   (dc, _) <- renderVariable ps value
-  let dc' = if length ps > 1 then "Json.Encode.list identity" <+> squarebracks dc else dc
+  let dc' = if length ps > 1 then "JE.list_ identity" <+> squarebracks dc else dc
   let cs = stext name <+> foldl1 (<+>) ps <+> "->"
-  let tag = pair (dquotes "tag") ("Json.Encode.string" <+> dquotes (stext name))
+  let tag = pair (dquotes "tag") ("JE.string" <+> dquotes (stext name))
   let ct = comma <+> pair (dquotes "contents") dc'
 
   return $ jsonEncodeObject cs tag ct
@@ -111,7 +111,7 @@ renderSum (MultipleConstructors constrs) = do
 renderEnumeration :: ElmConstructor -> RenderM Doc
 renderEnumeration (NamedConstructor name _) =
   return . nest 4 $ stext name <+> "->" <$$>
-      "Json.Encode.string" <+> dquotes (stext name)
+      "JE.string" <+> dquotes (stext name)
 renderEnumeration (MultipleConstructors constrs) = do
   dc <- mapM renderEnumeration constrs
   return $ foldl1 (<$+$>) dc
@@ -134,31 +134,32 @@ instance HasEncoder ElmValue where
   render _ = error "HasEncoderRef ElmValue: should not happen"
 
 instance HasEncoderRef ElmPrimitive where
-  renderRef _ EDate = pure  $ parens "Json.Encode.string << Date.toIsoString"
+  renderRef _ EDate = pure  $ parens "JE.string << Date.toIsoString"
   renderRef _ ETimePosix = pure "Iso8601.encode"
-  renderRef _ EUnit = pure "Json.Encode.null"
-  renderRef _ EInt = pure "Json.Encode.int"
-  renderRef _ EChar = pure "Json.Encode.char"
-  renderRef _ EBool = pure "Json.Encode.bool"
-  renderRef _ EFloat = pure "Json.Encode.float"
-  renderRef _ EString = pure "Json.Encode.string"
-  renderRef _ (EList (ElmPrimitive EChar)) = pure "Json.Encode.string"
+  renderRef _ EUnit = pure "JE.null"
+  renderRef _ EInt = pure "JE.int"
+  renderRef _ EChar = pure "JE.char"
+  renderRef _ EBool = pure "JE.bool"
+  renderRef _ EFloat = pure "JE.float"
+  renderRef _ EString = pure "JE.string"
+  renderRef _ EFile = pure "JE.null" -- File type will not be encoded
+  renderRef _ (EList (ElmPrimitive EChar)) = pure "JE.string"
   renderRef level (EList datatype) = do
     dd <- renderRef level datatype
-    return . parens $ "Json.Encode.list" <+> dd
+    return . parens $ "JE.list_" <+> dd
   renderRef level (EMaybe datatype) = do
     dd <- renderRef level datatype
-    return . parens $ "Maybe.withDefault Json.Encode.null << Maybe.map" <+> dd
+    return . parens $ "Maybe.withDefault JE.null << Maybe.map" <+> dd
   renderRef level (ETuple2 x y) = do
     dx <- renderRef (level + 1) x
     dy <- renderRef (level + 1) y
     let firstName = "m" <> int level
     let secondName = "n" <> int level
-    return . parens $ "\\("<> firstName <> "," <+> secondName <> ") -> Json.Encode.list identity [" <+> dx <+> firstName <> "," <+> dy <+> secondName <+> "]"
-  renderRef level (EDict k v) = do
-    dk <- renderRef level k
+    return . parens $ "\\("<> firstName <> "," <+> secondName <> ") -> JE.list_ identity [" <+> dx <+> firstName <> "," <+> dy <+> secondName <+> "]"
+  renderRef level (EDict _ v) = do
+    -- dk <- renderRef level k
     dv <- renderRef level v
-    return . parens $ "Json.Encode.dict" <+> dk <+> dv
+    return . parens $ "JE.dict_" <+> "identity" <+> dv -- "TODO use stringref code as dk when it's merged"
 
 toElmEncoderRefWith
   :: ElmType a
@@ -186,7 +187,7 @@ renderEncoder
   :: ElmType a
   => a -> RenderM ()
 renderEncoder x = do
-  require "Json.Encode"
+  require "JE"
   collectDeclaration . render . toElmType $ x
 
 -- | Variable names for the members of constructors
@@ -208,7 +209,7 @@ renderVariable (d : ds) v@(ElmRef {}) = do
   return (v' <+> d, ds)
 renderVariable ds ElmEmpty = return (empty, ds)
 renderVariable (_ : ds) (ElmPrimitiveRef EUnit) =
-  return ("Json.Encode.null", ds)
+  return ("JE.null", ds)
 renderVariable (d : ds) (ElmPrimitiveRef ref) = do
   r <- renderRef 0 ref
   return (r <+> d, ds)

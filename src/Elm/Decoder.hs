@@ -131,7 +131,7 @@ instance HasDecoderRef ElmPrimitive where
     return . parens $ "map Dict.fromList" <+> d
   renderRef (EMaybe datatype) = do
     dt <- renderRef datatype
-    return . parens $ "nullable" <+> dt
+    return . parens $ "maybe" <+> dt
   renderRef (ETuple2 x y) = do
     dx <- renderRef x
     dy <- renderRef y
@@ -145,6 +145,7 @@ instance HasDecoderRef ElmPrimitive where
   renderRef EChar = pure "char"
   renderRef EFloat = pure "float"
   renderRef EString = pure "string"
+  renderRef EFile = pure "File.decoder"
 
 toElmDecoderRefWith
   :: ElmType a
