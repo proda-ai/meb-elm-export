@@ -59,7 +59,7 @@ instance HasStringFrom ElmConstructor where
           then renderEnumeration
           else error "can only stringFrom enumeration types"
     cstrs <- mapM rndr constrs
-    pure $ (indent 4 $ foldl1 (<$+$>) cstrs)
+    pure $ "case x of" <$$> (indent 4 $ foldl1 (<$+$>) cstrs)
 
 
 renderEnumeration :: ElmConstructor -> RenderM Doc
