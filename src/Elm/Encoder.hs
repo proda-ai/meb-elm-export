@@ -159,7 +159,7 @@ instance HasEncoderRef ElmPrimitive where
   renderRef level (EDict _ v) = do
     -- dk <- renderRef level k
     dv <- renderRef level v
-    return . parens $ "JE.dict_" <+> "identity" <+> dv -- "TODO use stringref code as dk when it's merged"
+    return . parens $ "JE.dict" <+> "identity" <+> dv -- "TODO use stringref code as dk when it's merged"
 
 toElmEncoderRefWith
   :: ElmType a
