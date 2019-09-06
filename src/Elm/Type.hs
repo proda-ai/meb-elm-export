@@ -21,6 +21,9 @@ import Servant.API (Headers(getResponse))
 data ElmDatatype
   = ElmDatatype Text
                 ElmConstructor
+  | ElmHttpIdType Text
+                  ElmConstructor
+                  Text
   | ElmPrimitive ElmPrimitive
   deriving (Show, Eq)
 
@@ -126,6 +129,7 @@ instance ElmType a =>
     case toElmType (Proxy :: Proxy a) of
       ElmPrimitive primitive -> ElmPrimitiveRef primitive
       ElmDatatype name _ -> ElmRef name
+      ElmHttpIdType name _ _ -> ElmRef name
 
 instance ElmType a =>
          ElmType [a] where

@@ -426,10 +426,10 @@ toElmDecoderSpec =
         toElmDecoderRef (Proxy :: Proxy String) `shouldBe` "string"
       it "toElmDecoderRef (Maybe String)" $
         toElmDecoderRef (Proxy :: Proxy (Maybe String)) `shouldBe`
-        "(nullable string)"
+        "(maybe string)"
       it "toElmDecoderRef [Maybe String]" $
         toElmDecoderRef (Proxy :: Proxy [Maybe String]) `shouldBe`
-        "(list (nullable string))"
+        "(list (maybe string))"
       it "toElmDecoderRef (Map String (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
         "(dict (nullable string))"
