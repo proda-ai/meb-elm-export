@@ -32,19 +32,10 @@ instance HasType ElmDatatype where
     name <- renderRef d
     ctor <- render constructor
     return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
-  render d@(ElmHttpIdType _ constructor@(RecordConstructor _ _) _) = do
-    name <- renderRef d
-    ctor <- render constructor
-    return . nest 4 $ "type alias" <+> name <+> "=" <$$> ctor
-  render d@(ElmHttpIdType _ constructor _) = do
-    name <- renderRef d
-    ctor <- render constructor
-    return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef ElmDatatype where
   renderRef (ElmDatatype typeName _) = pure (stext typeName)
-  renderRef (ElmHttpIdType typeName _ _) = pure (stext typeName)
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
 instance HasType ElmConstructor where
@@ -99,12 +90,16 @@ instance HasTypeRef ElmPrimitive where
   renderRef EDate = do
     require "Date"
     pure "Date"
+  renderRef ETimePosix = do
+    require "Iso8601"
+    require "Time"
+    pure "Time.Posix"
   renderRef EBool = pure "Bool"
   renderRef EChar = pure "Char"
   renderRef EString = pure "String"
   renderRef EUnit = pure "()"
   renderRef EFloat = pure "Float"
-  renderRef ENativeFile = pure "List FileReader.NativeFile"
+  renderRef EFile = pure "List File"
 
 -- | Puts parentheses around the doc of an elm ref if it contains spaces.
 elmRefParens :: ElmPrimitive -> Doc -> Doc

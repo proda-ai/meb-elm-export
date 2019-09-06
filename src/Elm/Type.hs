@@ -16,13 +16,11 @@ import Data.Text hiding (all)
 import Data.Time
 import GHC.Generics
 import Prelude
+import Servant.API (Headers(getResponse))
 
 data ElmDatatype
   = ElmDatatype Text
                 ElmConstructor
-  | ElmHttpIdType Text
-                  ElmConstructor
-                  Text
   | ElmPrimitive ElmPrimitive
   deriving (Show, Eq)
 
@@ -31,10 +29,11 @@ data ElmPrimitive
   | EBool
   | EChar
   | EDate
+  | ETimePosix
   | EFloat
   | EString
   | EUnit
-  | ENativeFile
+  | EFile
   | EList ElmDatatype
   | EMaybe ElmDatatype
   | ETuple2 ElmDatatype
@@ -127,7 +126,6 @@ instance ElmType a =>
     case toElmType (Proxy :: Proxy a) of
       ElmPrimitive primitive -> ElmPrimitiveRef primitive
       ElmDatatype name _ -> ElmRef name
-      ElmHttpIdType name _ _ -> ElmRef name
 
 instance ElmType a =>
          ElmType [a] where
@@ -147,7 +145,7 @@ instance ElmType Day where
   toElmType _ = ElmPrimitive EDate
 
 instance ElmType UTCTime where
-  toElmType _ = ElmPrimitive EDate
+  toElmType _ = ElmPrimitive ETimePosix
 
 instance ElmType Float where
   toElmType _ = ElmPrimitive EFloat
@@ -212,3 +210,8 @@ isEnumeration :: ElmConstructor -> Bool
 isEnumeration (NamedConstructor _ ElmEmpty) = True
 isEnumeration (MultipleConstructors cs) = all isEnumeration cs
 isEnumeration _ = False
+
+-- We define this instance here because it is an orphan otherwise.
+
+instance ElmType a => ElmType (Headers headers a) where
+   toElmType = toElmType . getResponse

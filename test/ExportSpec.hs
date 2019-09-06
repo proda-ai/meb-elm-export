@@ -65,6 +65,12 @@ newtype Useless =
   Useless ()
   deriving (Generic, ElmType)
 
+data Unit = Unit
+  deriving (Generic, ElmType)
+
+newtype Wrapper = Wrapper Int
+  deriving (Generic, ElmType)
+
 newtype FavoritePlaces = FavoritePlaces
   { positionsByUser :: Map String [Position]
   } deriving (Generic, ElmType)
@@ -76,6 +82,12 @@ data LotsOfInts = LotsOfInts
   , intC :: Int32
   , intD :: Int64
   } deriving (Generic, ElmType)
+
+
+data Shadowing = Shadowing
+  { prop :: ( (Int, Int), ( String, String ) )
+  } deriving (Generic, ElmType)
+
 
 spec :: Hspec.Spec
 spec = do
@@ -103,10 +115,10 @@ toElmTypeSpec =
     it "toElmTypeSource Comment" $
       shouldMatchTypeSource
         (unlines
-           [ "module CommentType exposing (..)"
+           [ "module CommentType exposing (Comment)"
            , ""
-           , "import Date exposing (Date)"
            , "import Dict exposing (Dict)"
+           , "import Time"
            , ""
            , ""
            , "%s"
@@ -138,6 +150,18 @@ toElmTypeSpec =
         defaultOptions
         (Proxy :: Proxy Useless)
         "test/UselessType.elm"
+    it "toElmTypeSource Unit" $
+      shouldMatchTypeSource
+        (unlines ["module UnitType exposing (..)", "", "", "%s"])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitType.elm"
+    it "toElmTypeSource Wrapper" $
+      shouldMatchTypeSource
+        (unlines ["module WrapperType exposing (..)", "", "", "%s"])
+        defaultOptions
+        (Proxy :: Proxy Wrapper)
+        "test/WrapperType.elm"
     it "toElmTypeSource FavoritePlaces" $
       shouldMatchTypeSource
         (unlines
@@ -168,10 +192,10 @@ toElmTypeSpec =
     it "toElmTypeSourceWithOptions Comment" $
       shouldMatchTypeSource
         (unlines
-           [ "module CommentTypeWithOptions exposing (..)"
+           [ "module CommentTypeWithOptions exposing (Comment)"
            , ""
-           , "import Date exposing (Date)"
            , "import Dict exposing (Dict)"
+           , "import Time"
            , ""
            , ""
            , "%s"
@@ -179,6 +203,17 @@ toElmTypeSpec =
         (defaultOptions {fieldLabelModifier = withPrefix "comment"})
         (Proxy :: Proxy Comment)
         "test/CommentTypeWithOptions.elm"
+    it "toElmTypeSource Shadowing" $
+      shouldMatchTypeSource
+        (unlines
+          [ "module ShadowingType exposing (..)"
+          , ""
+          , ""
+          , "%s"
+          ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingType.elm"
     describe "Convert to Elm type references." $ do
       it "toElmTypeRef Post" $
         toElmTypeRef (Proxy :: Proxy Post) `shouldBe` "Post"
@@ -211,7 +246,7 @@ toElmDecoderSpec =
            , ""
            , "import CommentType exposing (..)"
            , "import Dict"
-           , "import Exts.Json.Decode exposing (..)"
+           , "import Iso8601"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -305,7 +340,7 @@ toElmDecoderSpec =
            , ""
            , "import CommentType exposing (..)"
            , "import Dict"
-           , "import Exts.Json.Decode exposing (..)"
+           , "import Iso8601"
            , "import Json.Decode exposing (..)"
            , "import Json.Decode.Pipeline exposing (..)"
            , ""
@@ -330,6 +365,51 @@ toElmDecoderSpec =
         defaultOptions
         (Proxy :: Proxy Useless)
         "test/UselessDecoder.elm"
+    it "toElmDecoderSource Unit" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module UnitDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import UnitType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitDecoder.elm"
+    it "toElmDecoderSource Wrapper" $
+      shouldMatchDecoderSource
+        (unlines
+           [ "module WrapperDecoder exposing (..)"
+           , ""
+           , "import Json.Decode exposing (..)"
+           , "import Json.Decode.Pipeline exposing (..)"
+           , "import WrapperType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Wrapper)
+        "test/WrapperDecoder.elm"
+    it "toElmDecoderSource Shadowing" $
+      shouldMatchDecoderSource
+        (unlines
+            [ "module ShadowingDecoder exposing (..)"
+            , ""
+            , "import Json.Decode exposing (..)"
+            , "import Json.Decode.Pipeline exposing (..)"
+            , "import ShadowingType exposing (..)"
+            , ""
+            , ""
+            , "%s"
+            ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingDecoder.elm"
     describe "Convert to Elm decoder references." $ do
       it "toElmDecoderRef Post" $
         toElmDecoderRef (Proxy :: Proxy Post) `shouldBe` "decodePost"
@@ -352,10 +432,10 @@ toElmDecoderSpec =
         "(list (maybe string))"
       it "toElmDecoderRef (Map String (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 (,) (index 0 string) (index 1 (maybe string)))))"
+        "(dict (nullable string))"
       it "toElmDecoderRef (IntMap (Maybe String))" $
         toElmDecoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(map Dict.fromList (list (map2 (,) (index 0 int) (index 1 (maybe string)))))"
+        "(map Dict.fromList (list (map2 Tuple.pair (index 0 int) (index 1 (nullable string)))))"
 
 toElmEncoderSpec :: Hspec.Spec
 toElmEncoderSpec =
@@ -366,7 +446,7 @@ toElmEncoderSpec =
            [ "module CommentEncoder exposing (..)"
            , ""
            , "import CommentType exposing (..)"
-           , "import Exts.Json.Encode exposing (..)"
+           , "import Iso8601"
            , "import Json.Encode"
            , ""
            , ""
@@ -396,7 +476,7 @@ toElmEncoderSpec =
            [ "module CommentEncoderWithOptions exposing (..)"
            , ""
            , "import CommentType exposing (..)"
-           , "import Exts.Json.Encode exposing (..)"
+           , "import Iso8601"
            , "import Json.Encode"
            , ""
            , ""
@@ -434,6 +514,20 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy Position)
         "test/PositionEncoder.elm"
+    it "toElmEncoderSource Position" $
+      shouldMatchEncoderSource
+        (unlines
+            [ "module ShadowingEncoder exposing (..)"
+            , ""
+            , "import Json.Encode"
+            , "import ShadowingType exposing (..)"
+            , ""
+            , ""
+            , "%s"
+            ])
+        defaultOptions
+        (Proxy :: Proxy Shadowing)
+        "test/ShadowingEncoder.elm"
     it "toElmEncoderSourceWithOptions Timing" $
       shouldMatchEncoderSource
         (unlines
@@ -462,12 +556,54 @@ toElmEncoderSpec =
         defaultOptions
         (Proxy :: Proxy Monstrosity)
         "test/MonstrosityEncoder.elm"
+    it "toElmEncoderSourceWithOptions Useless" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module UselessEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import UselessType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Useless)
+        "test/UselessEncoder.elm"
+    it "toElmEncoderSourceWithOptions Unit" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module UnitEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import UnitType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Unit)
+        "test/UnitEncoder.elm"
+    it "toElmEncoderSourceWithOptions Wrapper" $
+      shouldMatchEncoderSource
+        (unlines
+           [ "module WrapperEncoder exposing (..)"
+           , ""
+           , "import Json.Encode"
+           , "import WrapperType exposing (..)"
+           , ""
+           , ""
+           , "%s"
+           ])
+        defaultOptions
+        (Proxy :: Proxy Wrapper)
+        "test/WrapperEncoder.elm"
     describe "Convert to Elm encoder references." $ do
       it "toElmEncoderRef Post" $
         toElmEncoderRef (Proxy :: Proxy Post) `shouldBe` "encodePost"
       it "toElmEncoderRef [Comment]" $
         toElmEncoderRef (Proxy :: Proxy [Comment]) `shouldBe`
-        "(Json.Encode.list << List.map encodeComment)"
+        "(Json.Encode.list encodeComment)"
       it "toElmEncoderRef Position" $
         toElmEncoderRef (Proxy :: Proxy Position) `shouldBe` "encodePosition"
       it "toElmEncoderRef Timing" $
@@ -481,13 +617,13 @@ toElmEncoderSpec =
         "(Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string)"
       it "toElmEncoderRef [Maybe String]" $
         toElmEncoderRef (Proxy :: Proxy [Maybe String]) `shouldBe`
-        "(Json.Encode.list << List.map (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.list (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (Map String (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (Map String (Maybe String))) `shouldBe`
-        "(Exts.Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.dict Json.Encode.string (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
       it "toElmEncoderRef (IntMap (Maybe String))" $
         toElmEncoderRef (Proxy :: Proxy (IntMap (Maybe String))) `shouldBe`
-        "(Exts.Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
+        "(Json.Encode.dict Json.Encode.int (Maybe.withDefault Json.Encode.null << Maybe.map Json.Encode.string))"
 
 moduleSpecsSpec :: Hspec.Spec
 moduleSpecsSpec =
@@ -503,10 +639,11 @@ moduleSpecsSpec =
       head (declarations mySpec) `shouldBe`
       intercalate
         "\n"
-        [ "import Date"
-        , "import Dict"
+        [ "import Dict"
+        , "import Iso8601"
         , "import Json.Decode exposing (..)"
         , "import Json.Decode.Pipeline exposing (..)"
+        , "import Time"
         ]
 
 shouldMatchTypeSource
