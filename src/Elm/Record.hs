@@ -32,19 +32,10 @@ instance HasType ElmDatatype where
     name <- renderRef d
     ctor <- render constructor
     return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
-  render d@(ElmHttpIdType _ constructor@(RecordConstructor _ _) _) = do
-    name <- renderRef d
-    ctor <- render constructor
-    return . nest 4 $ "type alias" <+> name <+> "=" <$$> ctor
-  render d@(ElmHttpIdType _ constructor _) = do
-    name <- renderRef d
-    ctor <- render constructor
-    return . nest 4 $ "type" <+> name <$$> "=" <+> ctor
   render (ElmPrimitive primitive) = renderRef primitive
 
 instance HasTypeRef ElmDatatype where
   renderRef (ElmDatatype typeName _) = pure (stext typeName)
-  renderRef (ElmHttpIdType typeName _ _) = pure (stext typeName)
   renderRef (ElmPrimitive primitive) = renderRef primitive
 
 instance HasType ElmConstructor where

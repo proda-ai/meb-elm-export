@@ -61,6 +61,7 @@ instance HasStringFrom ElmConstructor where
     cstrs <- mapM rndr constrs
     pure $ "case x of" <$$> (indent 4 $ foldl1 (<$+$>) cstrs)
 
+  render (RecordConstructor _ _) = error "String From called on incompatible constructor type"
 
 renderEnumeration :: ElmConstructor -> RenderM Doc
 renderEnumeration (NamedConstructor name _) =
