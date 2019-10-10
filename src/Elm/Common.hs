@@ -36,6 +36,9 @@ stext = text . LT.fromStrict
 spaceparens :: Doc -> Doc
 spaceparens doc = "(" <+> doc <+> ")"
 
+newlinebracks :: Doc -> Doc
+newlinebracks doc = "[" <> doc <$$> "]"
+
 -- | Parentheses of which the right parenthesis exists on a new line
 newlineparens :: Doc -> Doc
 newlineparens doc = "(" <> doc <$$> ")"
