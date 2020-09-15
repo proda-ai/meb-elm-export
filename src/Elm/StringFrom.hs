@@ -14,9 +14,7 @@ import qualified Data.Text                     as T
 import           Elm.Common
 import           Elm.Type
 import           Text.PrettyPrint.Leijen.Text
-                                         hiding ( (<$>)
-                                                , (<>)
-                                                )
+                                         hiding ( (<$>) )
 import           Elm.Type                       ( isEnumeration )
 
 class HasStringFrom a where

@@ -18,7 +18,6 @@ import           Elm.Common
 import           Elm.Type
 import           Text.PrettyPrint.Leijen.Text
                                          hiding ( (<$>)
-                                                , (<>)
                                                 )
 import           Elm.Type                       ( isEnumeration )
 
