@@ -84,7 +84,9 @@ instance HasStringFromRef ElmPrimitive where
   renderRef _ EFloat                       = pure "String.fromFloat"
   renderRef _ (EList (ElmPrimitive EChar)) = pure "identity"
   renderRef _ EString                      = pure "identity"
-  renderRef _ dat = error $ "ElmType does not support stringFrom" ++ show dat
+  -- This is a HACK
+  renderRef _ (EMaybe (ElmPrimitive EString)) = pure "Maybe.withDefault \"\""
+  renderRef _ dat = error $ "ElmType does not support stringFrom " ++ show dat
 
 
 toElmStringFromRefWith :: ElmType a => Options -> a -> T.Text
